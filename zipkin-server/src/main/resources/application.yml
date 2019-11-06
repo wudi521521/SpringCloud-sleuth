@@ -1,0 +1,71 @@
+server:
+  port: 8769
+spring:
+  application:
+    name: zipkin-server
+  datasource: ###*******数据源***********###
+    druid:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/wudi?useUnicode=true&characterEncoding=utf8&useSSL=false
+      username: ENC(0jzBNDl96rCQYeUJG6iO/w==)
+      password: ENC(2NBkMHFBQA4k+ibIXIXirg==)
+      stat-view-servlet:
+        login-username: ENC(0jzBNDl96rCQYeUJG6iO/w==)        #监控后台账号和密码
+        login-password: ENC(2NBkMHFBQA4k+ibIXIXirg==)
+      #filters: stat,log4j         #配置监控统计拦截的filters,去掉后监控界面sql无法统计，'wall'用于防火墙
+      connect-properties: {druid.stat.mergeSql: true,druid.stat.slowSqlMillis: 5000} #通过connectProperties属性来打开mergeSql功能;慢sql记录
+      test-while-idle: true           #建议配置为true，不影响性能，并且保障安全性能，申请连接的时候检查，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效
+      validation-query: SELECT 1 FROM DUAL #用来检测连接是否有效的sql,要求是一个查询语句
+  sleuth:
+    web:
+      enabled: false
+  # rabbitmq
+zipkin2:
+  collector:
+    rabbitmq:
+      host: 30086365.mq-amqp.cn-beijing-a.aliyuncs.com
+      port: 5672
+      username: LTAIOxdLumjmoTWj
+      password: NacbbECfXnuApS5KZrqCnmz58lHN3K
+      virtual-host: dev-eblocks-ele
+      template:
+        mandatory: true
+      listener:
+        simple:
+          acknowledge-mode: manual
+          prefetch: 1
+        direct:
+          acknowledge-mode: manual
+          prefetch: 1
+      publisher-confirms: true
+      publisher-returns: true
+      queue: zipkin
+###zipkin storage 指定存储的类型
+zipkin:
+  storage:
+    type: mysql
+
+### eureka注册中心的配置
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://127.0.0.1:8761/eureka/
+    registry-fetch-interval-seconds: 30 #****eureka客户端默认拉取的默认时间是30s,也就是缓存清单更新时间是30s
+  instance:
+    #hostname: 127.0.0.1
+    instance-id: ${spring.cloud.client.ip-address}:${server.port} #***eureka图形化界面显示的是ip:port，如果不配置默认显示为${spring.cloud.client.hostname}:${spring.application.name}:${spring.application.instance_id:${server.port}}
+    prefer-ip-address: true #***eureka图形化界面显示的ip
+
+##zipkin启动报错无法访问的解决方法
+management:
+  metrics:
+    web:
+      server:
+        auto-time-requests: false
+
+###jasypt数据库用户名,密码加密salt--配置加/解密码,默认为PBEWithMD5AndDES,进行加密
+jasypt:
+  encryptor:
+    password: eblocks@2019
